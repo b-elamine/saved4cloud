@@ -5,6 +5,7 @@ import sam4c.light.model.rule.*;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,7 +72,16 @@ public class SemanticValidator {
             Set<String> src = names(rr.sctxComponents()), tgt = names(rr.tctxComponents());
             Set<String> gate = names(rr.actxComponents());
             if (src.isEmpty() || tgt.isEmpty() || gate.isEmpty()) continue;
-            List<String> bypass = pathAvoiding(src, tgt, gate, componentConnectors, connectorComponents);
+            // token checked where it is used: a component sharing a credential with the
+            // authenticator verifies it itself, so it counts as a gate too
+            Set<String> verifiers = sharingCredential(gate, all);
+            Set<String> open = new HashSet<>(tgt);
+            open.removeAll(verifiers);
+            Set<String> avoid = new HashSet<>(gate);
+            avoid.addAll(verifiers);
+            avoid.removeAll(src);
+            List<String> bypass = open.isEmpty() ? null
+                    : pathAvoiding(src, open, avoid, componentConnectors, connectorComponents);
             if (bypass != null)
                 warnings.add("Authentication requires access from '" + String.join(",", src) + "' to '"
                         + String.join(",", tgt) + "' to pass through '" + String.join(",", gate)
@@ -111,8 +121,12 @@ public class SemanticValidator {
             if (!(rr.rule() instanceof Isolation)) continue;
             if (!rr.actxComponents().isEmpty()) {
                 Set<String> via = names(rr.actxComponents());
+                // a mediator that is itself a source or target can't mediate between them
+                Set<String> avoid = new HashSet<>(via);
+                avoid.removeAll(names(rr.sctxComponents()));
+                avoid.removeAll(names(rr.tctxComponents()));
                 List<String> bypass = pathAvoiding(names(rr.sctxComponents()), names(rr.tctxComponents()),
-                        via, componentConnectors, connectorComponents);
+                        avoid, componentConnectors, connectorComponents);
                 if (bypass != null)
                     warnings.add("Isolation violated: a multi-hop path exists (" + String.join(" -> ", bypass)
                             + ") that bypasses the approved mediator '" + String.join(",", via) + "' "
@@ -296,6 +310,25 @@ public class SemanticValidator {
             }
         }
         return null;
+    }
+
+    // components whose credentials overlap with the given components' credentials
+    private static Set<String> sharingCredential(Set<String> gate, List<Component> all) {
+        Set<String> creds = new HashSet<>();
+        for (Component c : all) if (gate.contains(c.name())) creds.addAll(credentialsOf(c));
+        Set<String> out = new HashSet<>();
+        if (creds.isEmpty()) return out;
+        for (Component c : all)
+            for (String k : credentialsOf(c)) if (creds.contains(k)) { out.add(c.name()); break; }
+        return out;
+    }
+
+    private static Set<String> credentialsOf(Component c) {
+        Object v = c.properties().get("credentials");
+        Set<String> r = new HashSet<>();
+        if (v instanceof Collection<?> col) for (Object o : col) r.add(String.valueOf(o));
+        else if (v != null) r.add(String.valueOf(v));
+        return r;
     }
 
     // like pathAvoiding but inverted: can only expand past a node if it's in weak
