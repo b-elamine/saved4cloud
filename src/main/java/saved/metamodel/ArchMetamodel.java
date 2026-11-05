@@ -5,8 +5,8 @@ import static saved.metamodel.MDataType.*;
 // The architecture metamodel. Components are either Deployables (App/Data, things
 // that run), Hosts (VM/PM/Worker, what they run on), or a Colocation (a group of
 // Deployables scaled and placed together). Wired together by ports, connectors and
-// links. Components are ContextualElements, which is how security rules get to
-// point at them.
+// links.
+
 public final class ArchMetamodel {
 
     public static final MPackage INSTANCE = define();
@@ -18,7 +18,6 @@ public final class ArchMetamodel {
                 java.util.List.of(
 
             MClass.builder("Component").abstractClass()
-                .superType("ContextualElement")
                 .attr("type", STRING, 1, 1)
                 .build(),
 
@@ -65,19 +64,19 @@ public final class ArchMetamodel {
             MClass.builder("Worker") .superType("Host").build(),
 
             // Implementation: a reusable build, referenced by any number of Deployables.
-            MClass.builder("Implementation").superType("ContextualElement")
+            MClass.builder("Implementation")
                 .attr("runtime",   STRING, 0, 1, "container", "process", "function")
                 .attr("image",     STRING, 0, 1)
                 .attr("resources", MAP,    0, 1)   // {cpu, memory}
                 .attr("config",    MAP,    0, 1)   // {KEY: value}
                 .build(),
 
-            MClass.builder("Port").superType("ContextualElement")
+            MClass.builder("Port")
                 .attr("number",   INT,    0, 1)
                 .attr("protocol", STRING, 0, 1, "tcp", "udp", "http", "grpc", "https", "grpcs")
                 .build(),
 
-            MClass.builder("Connector").superType("ContextualElement")
+            MClass.builder("Connector")
                 .attr("external", BOOLEAN, 0, 1)
                 .attr("protocol", STRING,  0, 1, "tcp", "udp", "http", "grpc", "https", "grpcs")
                 .build(),
@@ -88,7 +87,7 @@ public final class ArchMetamodel {
                 .attr("direction",     STRING, 0, 1)   // in | out | inout (default inout)
                 .build(),
 
-            MClass.builder("Architecture").superType("ContextualElement")
+            MClass.builder("Architecture")
                 .ref("components",      "Component",      true, 0, -1)
                 .ref("connectors",      "Connector",      true, 0, -1)
                 .ref("links",           "Link",           true, 0, -1)

@@ -11,6 +11,7 @@ import saved.metamodel.MClass;
 import saved.metamodel.MPackage;
 import saved.metamodel.SavedMetamodel;
 import saved.output.HtmlReportGenerator;
+import saved.output.MermaidMetamodelWriter;
 import saved.output.ModelInspector;
 import saved.output.ModelSerializer;
 import saved.output.SecDslScaffolder;
@@ -46,6 +47,9 @@ public class Main implements Callable<Integer> {
     @Option(names = {"--metamodel"}, description = "Print the M2 metamodel definition and exit")
     private boolean printMetamodel;
 
+    @Option(names = {"--metamodel-uml"}, description = "Print the full metamodel (architecture, security) as two Mermaid class diagrams and exit")
+    private boolean printMetamodelUml;
+
     @Option(names = {"--validate"}, description = "Print resolution report and exit without writing output")
     private boolean validateOnly;
 
@@ -68,6 +72,12 @@ public class Main implements Callable<Integer> {
     public Integer call() {
         try {
             if (printMetamodel) { printMetamodel(); return 0; }
+
+            if (printMetamodelUml) {
+                System.out.println(MermaidMetamodelWriter.generate(SavedMetamodel.ARCH));
+                System.out.println(MermaidMetamodelWriter.generate(SavedMetamodel.SECURITY));
+                return 0; 
+            }
 
             if (initSecdsl) {
                 if (archFile == null) {
@@ -208,7 +218,6 @@ public class Main implements Callable<Integer> {
     }
 
     private static void printMetamodel() {
-        printPackage("CORE        ", SavedMetamodel.CORE);
         printPackage("ARCHITECTURE", SavedMetamodel.ARCH);
         printPackage("SECURITY    ", SavedMetamodel.SECURITY);
     }

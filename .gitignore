@@ -6,3 +6,7 @@ target/
 .DS_Store
 private/
 docs/generator-roadmap-TODO.md
+CLAUDE.md
+.claude/
+*PLAN*.md
+*TODO*.md
