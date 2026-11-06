@@ -28,7 +28,7 @@ public record MClass(
         }
         // STRING field with a closed value set (enum)
         public Builder attr(String n, MDataType t, int lo, int hi, String... allowed) {
-            attrs.add(new MAttribute(n, t, lo, hi, java.util.List.of(allowed))); return this;
+            attrs.add(new MAttribute(n, t, lo, hi, java.util.List.of(allowed), IdScope.NONE)); return this;
         }
         public Builder ref(String n, String target, boolean containment, int lo, int hi) {
             refs.add(new MReference(n, target, containment, lo, hi)); return this;
