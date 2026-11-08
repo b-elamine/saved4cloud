@@ -1,0 +1,106 @@
+# The architecture metamodel (M2): define what a user write in an .arch.yaml file.
+# The tool reads it (MetamodelLoader) and checks every user model against it.
+# note: lower = 0 (optional), upper = 1 (one value). upper -1 = many.
+
+package: architecture
+uri: http://avalon.inria.fr/saved/architecture/
+
+classes:
+
+  # top parent of every box; each one says its kind (type: App, type: VM...)
+  - name: Component
+    abstract: true
+    attributes:
+      - { name: type, type: STRING, lower: 1 }    # its kind, must be a concrete class below (App, VM...)
+
+  # anything scaled and spread as one thing (a Deployable or a Colocation)
+  - name: Unit
+    abstract: true
+    superTypes: [Component]
+    attributes:
+      - { name: scale, type: MAP}      # how many copies run: {replicas, min, max, metric}
+      - { name: spread, type: STRING, allowed: [none, host, zone] }   # keep copies on different hosts / zones, so one failure doesn't kill all
+
+  # anything that runs; App and Data inherit its fields
+  - name: Deployable
+    abstract: true
+    superTypes: [Unit]
+    attributes:
+      - { name: exposure, type: STRING, allowed: [none, internal, external] }        # who may reach it: nobody, only inside, or the internet
+      - { name: lifecycle, type: STRING, allowed: [continuous, batch, scheduled] }   # always on, runs once and stops, or runs on a timer
+      - { name: credentials, type: LIST }       # names of the secrets it holds (e.g. [DB_PASSWORD])
+      - { name: placement, type: STRING }       # the zone it must run in
+    references:
+      - { name: deployedOn, target: Host }                              # the machine it runs on (just points to it)
+      - { name: implementation, target: Implementation }                # the build/image it runs (shared, just points to it)
+      - { name: ports, target: Port, containment: true, upper: -1 }     # its network ports; they belong to it
+
+  # keeps no data (web server, API...)
+  - name: App
+    superTypes: [Deployable]
+
+  # stores data (database, cache...)
+  - name: Data
+    superTypes: [Deployable]
+    attributes:
+      - { name: persistent, type: BOOLEAN }     # true = data must survive a restart (then storage is needed)
+      - { name: storage, type: STRING }         # where the data is kept (e.g. a volume)
+
+  # Deployables scaled and placed together, on the same host
+  - name: Colocation
+    superTypes: [Unit]
+    references:
+      - { name: members, target: Deployable, containment: true, upper: -1 }   # the deployables in the group; they live inside it
+
+  # what Deployables run on
+  - name: Host
+    abstract: true
+    superTypes: [Component]
+    attributes:
+      - { name: capacity, type: MAP }           # how much it can hold: {cpu, memory}
+      - { name: zone, type: STRING }            # the zone (data center / region) it sits in
+    references:
+      - { name: ports, target: Port, containment: true, upper: -1 }     # its network ports; they belong to it
+
+  # the kinds of host: virtual machine, physical machine, cluster node
+  - name: VM
+    superTypes: [Host]
+  - name: PM
+    superTypes: [Host]
+  - name: Worker
+    superTypes: [Host]
+
+  # a reusable build (image), used by any number of Deployables
+  - name: Implementation
+    attributes:
+      - { name: runtime, type: STRING, allowed: [container, process, function] }   # how it runs: a container, a plain process, or a serverless function
+      - { name: image, type: STRING }           # the container image (e.g. nginx:1.25)
+      - { name: resources, type: MAP }          # what one copy needs: {cpu, memory}
+      - { name: config, type: MAP }             # settings passed to it: {KEY: value}
+
+  # a network entry point on a component
+  - name: Port
+    attributes:
+      - { name: number, type: INT }             # the port number (e.g. 8080)
+      - { name: protocol, type: STRING, allowed: [tcp, udp, http, grpc, https, grpcs] }   # what it speaks
+
+  # a network both sides plug into; two components talk if they share one
+  - name: Connector
+    attributes:
+      - { name: external, type: BOOLEAN }       # true = it is the internet, reachable from outside
+      - { name: protocol, type: STRING, allowed: [tcp, udp, http, grpc, https, grpcs] }   # what travels on it
+
+  # plugs one port into one connector
+  - name: Link
+    attributes:
+      - { name: portRef, type: STRING, lower: 1 }         # the port, written Component.port (e.g. Api.http)
+      - { name: connectorName, type: STRING, lower: 1 }   # the connector it plugs into
+      - { name: direction, type: STRING }                 # in | out | inout (default inout): which way traffic goes
+
+  # the root: one per file, it contains everything else
+  - name: Architecture
+    references:
+      - { name: components, target: Component, containment: true, upper: -1 }             # all the boxes
+      - { name: connectors, target: Connector, containment: true, upper: -1 }             # all the networks
+      - { name: links, target: Link, containment: true, upper: -1 }                       # all the wires port -> connector
+      - { name: implementations, target: Implementation, containment: true, upper: -1 }   # all the builds
