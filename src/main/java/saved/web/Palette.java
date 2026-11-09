@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  *
  * The palette is derived, not hard-coded: every concrete subtype of Component
  * becomes a component item, and Connector becomes a connector item. Adding a new
- * type to ArchMetamodel automatically adds a palette item -- the metamodel drives
+ * type to architecture.mm.yaml automatically adds a palette item -- the metamodel drives
  * the editor. Required attributes per type come from AttributePolicy.
  */
 public final class Palette {

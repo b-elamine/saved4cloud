@@ -9,7 +9,7 @@ import saved.model.Port;
 import java.util.*;
 
 // Turns a raw YAML component block into a Component. Fully metamodel-driven: which
-// fields a type reads comes from ArchMetamodel.java (allAttributes/allReferences),
+// fields a type reads comes from architecture.mm.yaml (allAttributes/allReferences),
 // not a hardcoded list here. Add a field to the metamodel and this loader picks it
 // up with no other change -- add a whole new concrete type the same way, no Java
 // handler class needed.

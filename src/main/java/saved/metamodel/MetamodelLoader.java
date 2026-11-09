@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 
 // Reading m2 yaml file into MPackage
 // Building each class using the M3 builders
@@ -24,6 +27,18 @@ public final class MetamodelLoader {
 
         return new MPackage(required(root, "package"), required(root, "uri"), List.copyOf(classes));
     }
+
+    // load an M2 file shipped inside the jar (it lives in src/main/resources)
+    public static MPackage loadResource(String path){
+        try (InputStream in = MetamodelLoader.class.getClassLoader().getResourceAsStream(path)) {
+            if (in == null) {
+                throw new IllegalArgumentException("metamodel resource not found: "+ path);
+            }
+            return load(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot read metamodel: " + path, e);
+        }
+    } 
 
     // helper for : failure when a required field is missing
     private static String required(Map<String, Object> m, String key){

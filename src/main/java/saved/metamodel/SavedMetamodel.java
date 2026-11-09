@@ -10,9 +10,9 @@ import java.util.List;
  *
  *   M3   MPackage / MClass / MAttribute / MReference    (this framework)
  *         |
- *   M2   ArchMetamodel       "http://avalon.inria.fr/saved/architecture/"
- *        SecurityMetamodel   "http://avalon.inria.fr/saved/security/"
- *        SavedMetamodel      "http://avalon.inria.fr/saved/"  (root, this class)
+ *   M2   architecture.mm.yaml       "http://avalon.inria.fr/saved/architecture/"
+ *        SecurityMetamodel          "http://avalon.inria.fr/saved/security/"
+ *        SavedMetamodel             "http://avalon.inria.fr/saved/"  (root, this class)
  *         |
  *   M1   Architecture + SecurityModel instances (loaded from YAML + .secdsl)
  *         |
@@ -21,7 +21,8 @@ import java.util.List;
 
 public final class SavedMetamodel {
 
-    public static final MPackage ARCH     = ArchMetamodel.INSTANCE;
+    // arch M2 now comes from the yaml inside the jar, loaded once at startup
+    public static final MPackage ARCH = MetamodelLoader.loadResource("metamodel/architecture.mm.yaml");
     public static final MPackage SECURITY = SecurityMetamodel.INSTANCE;
 
     /** Flat unified package -- all classes from all sub-metamodels in one view. */
