@@ -3,15 +3,15 @@ package saved.metamodel;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-// Reading m2 yaml file into MPackage
-// Building each class using the M3 builders
+// Reads an M2 yaml file (architecture.mm.yaml, security.mm.yaml...) into an MPackage,
+// building each class with the M3 builders. Knows only M3 words, so it reads any metamodel.
 
 public final class MetamodelLoader {
 

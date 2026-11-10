@@ -1,4 +1,4 @@
-# The architecture metamodel (M2): define what a user write in an .arch.yaml file.
+# The architecture metamodel (M2): defines what a user may write in an .arch.yaml file.
 # The tool reads it (MetamodelLoader) and checks every user model against it.
 # note: lower = 0 (optional), upper = 1 (one value). upper -1 = many.
 

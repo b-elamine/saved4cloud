@@ -1,0 +1,108 @@
+# The security metamodel (M2): defines what a user may write in a .secdsl file.
+# The tool reads it (MetamodelLoader) and checks every rules file against it.
+# note: lower = 0 (optional), upper = 1 (one value). upper -1 = many.
+
+package: security
+uri: http://avalon.inria.fr/saved/security/
+
+classes: 
+  # old element will be deleted after next sprint
+  - name: AbstractContext
+    abstract: true
+
+  # root, contains everything
+  - name: SecurityModel
+    references: 
+      - { name: attributes, target: AttributeType, containment: true, upper: -1 }
+      - { name: contexts, target: NamedContext, containment: true, upper: -1 }
+      - { name: rules, target: SecurityRule, containment: true, upper: -1 }
+
+  # this is a label the user put on components 
+  - name: AttributeType
+    superTypes: [AbstractContext]
+    attributes:
+      - { name: name, type: STRING, lower: 1 }
+      - { name: values, type: STRING, upper: -1 }
+
+  # a named group of components chosen by condition 
+  - name: NamedContext
+    superTypes: [AbstractContext]
+    attributes:
+      - { name: name, type: STRING, lower: 1 }
+    references:
+      - { name: conditions, target: Ref, containment: true, lower: 1, upper: -1 }
+  
+  # parent of security properties
+  - name: SecurityRule
+    abstract: true
+
+  ###### The Rules ######
+
+  # data from source to target must stay secret (encrypted)
+  - name: Confidentiality
+    superTypes: [SecurityRule]
+    references:
+      - { name: sctx, target: Ref, containment: true, lower: 1 }    # source components
+      - { name: tctx, target: Ref, containment: true }              # target components
+
+  # data from source to target must not be changed on the way
+  - name: Integrity
+    superTypes: [SecurityRule]
+    references:
+      - { name: sctx, target: Ref, containment: true, lower: 1 }    # source components
+      - { name: tctx, target: Ref, containment: true }              # target components
+
+  # source and target must not talk directly
+  - name: Isolation
+    superTypes: [SecurityRule]
+    references:
+      - { name: sctx, target: Ref, containment: true, lower: 1 }    # one side
+      - { name: tctx, target: Ref, containment: true }              # the other side
+
+  # source must pass through an authenticator before reaching the target
+  - name: Authentication
+    superTypes: [SecurityRule]
+    references:
+      - { name: sctx, target: Ref, containment: true, lower: 1 }    # who comes in
+      - { name: actx, target: Ref, containment: true, lower: 1 }    # the authenticator
+      - { name: tctx, target: Ref, containment: true, lower: 1 }    # what is protected
+
+  # who may do what on which resource
+  - name: Authorization
+    superTypes: [SecurityRule]
+    attributes:
+      - { name: action, type: STRING, lower: 1, upper: -1 }        # one or more: read, write, admin...
+    references:
+      - { name: subject, target: Ref, containment: true, lower: 1 }    # who
+      - { name: resource, target: Ref, containment: true, lower: 1 }   # on what
+
+  # these components must stay up, at a given level
+  - name: Availability
+    superTypes: [SecurityRule]
+    attributes:
+      - { name: level, type: STRING, lower: 1, allowed: [high, medium, low] }   # how strongly
+    references:
+      - { name: target, target: Ref, containment: true, lower: 1 }   # the components concerned
+
+  # the way to point to components from a rule or a context 
+  - name: Ref
+    abstract: true
+
+  # point by name : a context or a component name
+  - name: NamedRef
+    superTypes: [Ref]
+    attributes:
+      - { name: name, type: STRING, lower: 1 }
+  
+  # by label value
+  - name: ValuedAttrRef
+    superTypes: [Ref]
+    attributes: 
+      - { name: attribute, type: STRING, lower: 1 }
+      - { name: value, type: STRING, lower: 1 }
+  
+  # composition of several refs
+  - name: ComposedRef
+    superTypes: [Ref]
+    references: 
+      - { name: conditions, target: Ref, containment: true, lower: 2, upper: -1 }
