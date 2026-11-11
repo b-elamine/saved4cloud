@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Parent: shared settings + the list of modules. Builds nothing itself.
+     saved-framework (M3, loader, generator) is built first, then saved-cli (the tool). -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -6,9 +8,14 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>saved</groupId>
-  <artifactId>saved-cli</artifactId>
+  <artifactId>saved-parent</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>saved-framework</module>
+    <module>saved-cli</module>
+  </modules>
 
   <properties>
     <maven.compiler.source>21</maven.compiler.source>
@@ -16,50 +23,29 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>2.18.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.18.0</version>
-    </dependency>
-    <dependency>
-      <groupId>info.picocli</groupId>
-      <artifactId>picocli</artifactId>
-      <version>4.7.6</version>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.7.1</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>saved.Main</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <finalName>saved-cli</finalName>
-          <appendAssemblyId>false</appendAssemblyId>
-        </configuration>
-        <executions>
-          <execution>
-            <id>assemble-all</id>
-            <phase>package</phase>
-            <goals><goal>single</goal></goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+  <!-- versions in one place; each module only names what it uses -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>saved</groupId>
+        <artifactId>saved-framework</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>2.18.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.18.0</version>
+      </dependency>
+      <dependency>
+        <groupId>info.picocli</groupId>
+        <artifactId>picocli</artifactId>
+        <version>4.7.6</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>

@@ -42,7 +42,7 @@ Write the rules in `shop.secdsl`:
 Then run it:
 
 ```bash
-java -jar target/saved-cli.jar shop.arch.yaml shop.secdsl --validate
+java -jar saved-cli/target/saved-cli.jar shop.arch.yaml shop.secdsl --validate
 ```
 
 It finds two problems:
