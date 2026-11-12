@@ -2,8 +2,7 @@ package saved.metamodel;
 
 import java.util.List;
 
-// A field on an MClass. `allowed` is the value set for an enum STRING field
-// (empty means free text).
+// a simple field of a class; allowed = enum values (empty = any text)
 public record MAttribute(
         String name,
         MDataType type,
